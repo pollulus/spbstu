@@ -1,0 +1,42 @@
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score
+from sklearn.metrics import root_mean_squared_error
+import pandas as pd
+
+
+def compare_models(file_name):
+
+    # загрузка данных из файла
+    df = pd.read_csv(file_name)
+
+    # определение предикторов и целевого признака из столбцов датасета
+    features_list = ['Year', 'Engine HP', 'Engine Cylinders', 'highway MPG', 'city mpg', 'Popularity']
+    features = df[features_list]
+    target = df['MSRP']
+
+    # обработка пропущенных значений в предикторах: замена на средние значения столбцов
+    features = features.fillna(features.mean())
+
+    # разделение датасета на выборки в пропорции 75/25
+    features_train, features_test, target_train, target_test = train_test_split(features, target, test_size=0.25)
+
+    # обучение модели и вычисление ее корня из среднеквадратичной ошибки
+    model = LinearRegression()
+    model.fit(features_train, target_train)
+    result = model.predict(features_test)
+    rmse_trained_model = root_mean_squared_error(target_test, result)
+
+    # создание наивной модели, предсказывающей среднее значение целевого признака из тренировочной выборки
+    naive_model_result = [target_train.mean()] * len(target_test)
+    rmse_naive_model = root_mean_squared_error(target_test, naive_model_result)
+
+    # Разница между RMSE моделей
+    difference = rmse_naive_model - rmse_trained_model
+
+    # вывод результатов
+    print("RMSE обученной модели:", round(rmse_trained_model, 2))
+    print("RMSE наивной модели:", round(rmse_naive_model, 2))
+    print("Разница:", round(difference, 2))
+
+compare_models('data.csv')
